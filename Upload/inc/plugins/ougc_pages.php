@@ -509,7 +509,10 @@ function ougc_pages_show(/*$portal=false*/)
 	{
 		$lang->load('usercp');
 
-		add_breadcrumb($lang->nav_usercp, "usercp.php");
+		if($mybb->user['uid'] && $mybb->usergroup['canusercp'])
+		{
+			add_breadcrumb($lang->nav_usercp, "usercp.php");
+		}
 	}
 
 	if($category['breadcrumb'])
@@ -519,28 +522,29 @@ function ougc_pages_show(/*$portal=false*/)
 
 	$gids = explode(',', $mybb->user['additionalgroups']);
 	$gids[] = $mybb->user['usergroup'];
-	$gids = array_filter(array_unique($gids));
+	$gids = array_filter(array_unique(array_map('intval', $gids)));
 
-	$sqlwhere = 'visible=\'1\' AND cid=\''.(int)$category['cid'].'\' AND (groups=\'\'';
-	switch($db->type)
+	$category['cid'] = (int)$category['cid'];
+
+	$where = ["visible='1'", "cid='{$category['cid']}'"];
+
+	$where2 = [ "groups=''"];
+
+	foreach($gids as $gid)
 	{
-		case 'pgsql':
-		case 'sqlite':
-			foreach($gids as $gid)
-			{
-				$gid = (int)$gid;
-				$sqlwhere .= ' OR \',\'||groups||\',\' LIKE \'%,'.$gid.',%\'';
-			}
-			break;
-		default:
-			foreach($gids as $gid)
-			{
-				$gid = (int)$gid;
-				$sqlwhere .= ' OR CONCAT(\',\',groups,\',\') LIKE \'%,'.$gid.',%\'';
-			}
-			break;
+		switch($db->type)
+		{
+			case 'pgsql':
+			case 'sqlite':
+				$where2[] = "','||groups||',' LIKE '%,{$gid},%'";
+				break;
+			default:
+				$where2[] = "CONCAT(',',groups,',') LIKE '%,{$gid},%'";
+				break;
+		}
 	}
-	$sqlwhere .= ')';
+
+	$where = implode(' AND ', array_merge($where, ['('.implode(' OR ', $where2).')']));
 
 	/*$navigation = array('previous' => '', 'right' => 'next');*/
 
@@ -591,7 +595,7 @@ function ougc_pages_show(/*$portal=false*/)
 		$title = $category['name'] = htmlspecialchars_uni($category['name']);
 		$description = $category['description'] = htmlspecialchars_uni($category['description']);
 
-		$query = $db->simple_select('ougc_pages', '*', $sqlwhere, array('order_by' => 'disporder'));
+		$query = $db->simple_select('ougc_pages', '*', $where, array('order_by' => 'disporder'));
 
 		$page_list = '';
 		while($page = $db->fetch_array($query))
@@ -679,7 +683,17 @@ function ougc_pages_init()
 	global $mybb;
 	global $templatelist, $ougc_pages;
 	global $category, $page, $session;
-	global $plugins;
+	global $plugins, $navbits;
+
+	if(empty($navbits))
+	{
+		$navbits = [
+			0 => [
+				'name' => $mybb->settings['bbname_orig'],
+				'url' => $mybb->settings['bburl'].'/index.php'
+			]
+		];
+	}
 
 	/*if(THIS_SCRIPT == 'portal.php' && !$mybb->settings['ougc_pages_portal'] || THIS_SCRIPT == 'pages.php' && $mybb->settings['ougc_pages_portal'])
 	{
@@ -825,6 +839,8 @@ function ougc_pages_init()
 		{
 			if($page['init'])
 			{
+				$plugins->run_hooks('ougc_pages_global_end');
+			
 				ougc_pages_execute();
 			}
 
@@ -859,30 +875,31 @@ function ougc_pages_usercp_menu()
 
 		$gids = explode(',', $mybb->user['additionalgroups']);
 		$gids[] = $mybb->user['usergroup'];
-		$gids = array_filter(array_unique($gids));
+		$gids = array_filter(array_unique(array_map('intval', $gids)));
 
-		$sqlwhere = 'visible=\'1\' AND cid=\''.(int)$cid.'\' AND (groups=\'\'';
-		switch($db->type)
-		{
-			case 'pgsql':
-			case 'sqlite':
-				foreach($gids as $gid)
-				{
-					$gid = (int)$gid;
-					$sqlwhere .= ' OR \',\'||groups||\',\' LIKE \'%,'.$gid.',%\'';
-				}
-				break;
-			default:
-				foreach($gids as $gid)
-				{
-					$gid = (int)$gid;
-					$sqlwhere .= ' OR CONCAT(\',\',groups,\',\') LIKE \'%,'.$gid.',%\'';
-				}
-				break;
-		}
-		$sqlwhere .= ')';
+		$cid = (int)$cid;
+
+		$where = ["visible='1'", "cid='{$cid}'"];
 	
-		$query = $db->simple_select('ougc_pages', '*', $sqlwhere, array('order_by' => 'disporder'));
+		$where2 = [ "groups=''"];
+	
+		foreach($gids as $gid)
+		{
+			switch($db->type)
+			{
+				case 'pgsql':
+				case 'sqlite':
+					$where2[] = "','||groups||',' LIKE '%,{$gid},%'";
+					break;
+				default:
+					$where2[] = "CONCAT(',',groups,',') LIKE '%,{$gid},%'";
+					break;
+			}
+		}
+	
+		$where = implode(' AND ', array_merge($where, ['('.implode(' OR ', $where2).')']));
+
+		$query = $db->simple_select('ougc_pages', '*', $where, array('order_by' => 'disporder'));
 	
 		$navs = '';
 
@@ -902,6 +919,8 @@ function ougc_pages_usercp_menu()
 		$category['name'] = htmlspecialchars_uni($category['name']);
 
 		$collapse_id = 'usercpougcpages'.$cid;
+
+		$collapse || $collapse = [];
 
 		$expaltext = (in_array($collapse_id, $collapse)) ? "[+]" : "[-]";
 
