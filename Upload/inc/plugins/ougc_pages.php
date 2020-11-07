@@ -30,6 +30,8 @@
 // Die if IN_MYBB is not defined, for security reasons.
 defined('IN_MYBB') or die('Direct initialization of this file is not allowed.');
 
+//define('OUGC_DISABLE_PHP_EVAL', true);
+
 // Run/Add Hooks
 if(defined('IN_ADMINCP'))
 {
@@ -43,9 +45,11 @@ if(defined('IN_ADMINCP'))
 }
 else
 {
+	global $mybb;
+
 	$plugins->add_hook('fetch_wol_activity_end', 'ougc_pages_fetch_wol_activity_end');
 	$plugins->add_hook('build_friendly_wol_location_end', 'ougc_pages_build_friendly_wol_location_end');
-	$plugins->add_hook('usercp_menu', 'ougc_pages_usercp_menu', 40);
+	$plugins->add_hook('usercp_menu', 'ougc_pages_usercp_menu', (int)$mybb->settings['ougc_pages_usercp_priority'] ?: 40);
 }
 
 // PLUGINLIBRARY
@@ -111,6 +115,12 @@ function ougc_pages_activate()
 		   'description'	=> $lang->setting_ougc_pages_perpage_desc,
 		   'optionscode'	=> 'numeric',
 			'value'			=>	20,
+		),
+		'usercp_priority'	=> array(
+		   'title'			=> $lang->setting_ougc_pages_usercp_priority,
+		   'description'	=> $lang->setting_ougc_pages_usercp_priority_desc,
+		   'optionscode'	=> 'numeric',
+			'value'			=>	40,
 		)
 	));
 
@@ -583,7 +593,7 @@ function ougc_pages_show(/*$portal=false*/)
 
 		#TODO: Add "Las updated on DATELINE..." to page
 
-		eval('$content = "'.$templates->get('ougcpages_temporary_tmpl').'";');
+		$content = eval($templates->render('ougcpages_temporary_tmpl'));
 
 		if($page['wrapper'])
 		{
@@ -670,10 +680,15 @@ function ougc_pages_execute()
 	global $mybb, $lang, $db, $plugins, $cache, $parser, $settings;
 	global $templates, $headerinclude, $header, $theme, $footer;
 	global $templatelist, $session, $maintimer, $permissions;
-	global $ougc_pages, $category, $page;
+	global $ougc_pages, $category, $page, $plugins;
 
-	#eval('? >'.$page['template'].'<?php');
-	eval('?>'.$page['template']);
+	$plugins->run_hooks('ougc_pages_execution_init');
+
+	if(!defined('OUGC_DISABLE_PHP_EVAL'))
+	{
+		eval('?>'.$page['template']);
+	}
+
 	exit;
 }
 
@@ -681,7 +696,7 @@ function ougc_pages_execute()
 function ougc_pages_init()
 {
 	global $mybb;
-	global $templatelist, $ougc_pages;
+	global $templates, $templatelist, $ougc_pages;
 	global $category, $page, $session;
 	global $plugins, $navbits;
 
@@ -699,11 +714,6 @@ function ougc_pages_init()
 	{
 		return;
 	}*/
-
-	if(defined('IN_ADMINCP') || (defined(THIS_SCRIPT) && THIS_SCRIPT == 'pages.php'))
-	{
-		return;
-	}
 
 	if(isset($templatelist))
 	{
@@ -837,14 +847,24 @@ function ougc_pages_init()
 
 		if($page['php'] && !$ougc_pages->no_permission)
 		{
-			if($page['init'])
-			{
-				$plugins->run_hooks('ougc_pages_global_end');
+			$page['init'] = isset($page['init']) ? (int)$page['init'] : 0;
 			
+			if($page['init'] === 1)
+			{
 				ougc_pages_execute();
 			}
-
-			$plugins->add_hook('global_end', 'ougc_pages_execute');
+			elseif($page['init'] === 2)
+			{
+				$plugins->add_hook('global_start', 'ougc_pages_execute', 90);
+			}
+			elseif($page['init'] === 3)
+			{
+				$plugins->add_hook('global_intermediate', 'ougc_pages_execute', 90);
+			}
+			else
+			{
+				$plugins->add_hook('global_end', 'ougc_pages_execute', 90);
+			}
 		}
 	}
 
@@ -1872,5 +1892,3 @@ class OUGC_Pages
 }
 
 $GLOBALS['ougc_pages'] = new OUGC_Pages;
-
-ougc_pages_init();

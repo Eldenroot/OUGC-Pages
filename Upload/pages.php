@@ -27,11 +27,41 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
 
-// Boring stuff..
-define('IN_MYBB', 1);
+
+define('IN_MYBB', true);
+
 define('THIS_SCRIPT', 'pages.php');
-$templatelist = 'usercp_nav_messenger, usercp_nav_messenger_tracking, usercp_nav_messenger_compose, usercp_nav_messenger_folder, usercp_nav_changename, usercp_nav_editsignature, usercp_nav_profile, usercp_nav_attachments, usercp_nav_misc, ougcpages_wrapper_ucp_nav_item, ougcpages_wrapper_ucp_nav, usercp_nav_home, usercp_nav, ougcpages_wrapper_ucp,ougcpages_wrapper_ucp';
-require_once './global.php';
+
+$working_dir = dirname(__FILE__);
+
+if(!$working_dir)
+{
+	$working_dir = '.';
+}
+
+$shutdown_queries = $shutdown_functions = array();
+
+require_once $working_dir.'/inc/init.php';
+
+if(!function_exists('ougc_pages_init'))
+{
+	exit('This page is disabled.');
+}
+
+ougc_pages_init();
+
+if(isset($templatelist))
+{
+	$templatelist .= ',';
+}
+else
+{
+	$templatelist = '';
+}
+
+$templatelist = 'usercp_nav_messenger, usercp_nav_messenger_tracking, usercp_nav_messenger_compose, usercp_nav_messenger_folder, usercp_nav_changename, usercp_nav_editsignature, usercp_nav_profile, usercp_nav_attachments, usercp_nav_misc, ougcpages_wrapper_ucp_nav_item, ougcpages_wrapper_ucp_nav, usercp_nav_home, usercp_nav, ougcpages_wrapper_ucp, ougcpages_wrapper_ucp';
+
+require_once $working_dir.'/global.php';
 
 $plugins->run_hooks('ougc_pages_start');
 

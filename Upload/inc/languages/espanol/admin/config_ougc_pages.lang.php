@@ -42,6 +42,8 @@ $l['setting_ougc_pages_seo_scheme_categories'] = 'Esquema de URL de Categorias';
 $l['setting_ougc_pages_seo_scheme_categories_desc'] = 'Escribe el esquema del enlace de las categorias. Deja vacio para deshabilitar los enlaces SEO para las categorias.';
 $l['setting_ougc_pages_perpage'] = 'Objetos por Pagina';
 $l['setting_ougc_pages_perpage_desc'] = 'Maximo numero de objetos a mostrar por pagina en el ACP.';
+$l['setting_ougc_pages_usercp_priority'] = 'UserCP Nav Priority';
+$l['setting_ougc_pages_usercp_priority_desc'] = 'La prioridad para los paneles de navegacion agregado al panel de usuarios.';
 
 // ACP
 $l['ougc_pages_manage'] = 'Administrar Paginas';
@@ -90,8 +92,12 @@ $l['ougc_pages_form_wrapper'] = 'Usar el Template Wrapper';
 $l['ougc_pages_form_wrapper_desc'] = 'El contenido de tu pagina sera embuelto en un template global.';
 $l['ougc_pages_form_php'] = 'Codigo PHP';
 $l['ougc_pages_form_php_desc'] = 'Selecciona si quieres procesar esta pagina como una pagina de PHP o de lo contrario utilizar el sistema de templates de MyBB.';
-$l['ougc_pages_form_init'] = 'Ejecutar en Inicio';
-$l['ougc_pages_form_init_desc'] = 'Las pagina sera ejecutada antes del inicio (global_end).';
+$l['ougc_pages_form_execution'] = 'Nivel de Ejecución';
+$l['ougc_pages_form_execution_desc'] = 'Selecciona el la prioridad de ejecucion para paginas PHP.';
+$l['ougc_pages_form_execution_init'] = 'Inicialización';
+$l['ougc_pages_form_execution_start'] = 'Global Start';
+$l['ougc_pages_form_execution_intermediate'] = 'Global Intermediate';
+$l['ougc_pages_form_execution_end'] = 'Predeterminado "Global End"';
 $l['ougc_pages_form_template'] = 'Template';
 $l['ougc_pages_form_template_desc'] = 'Escribe tu pagina abajo.';
 $l['ougc_pages_form_disporder'] = 'Orden';

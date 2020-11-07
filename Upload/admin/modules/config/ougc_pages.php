@@ -100,22 +100,20 @@ if($mybb->get_input('manage') == 'pages')
 	{
 		if(!empty($admin_options['codepress']))
 		{
-			$page->extra_header .= '
-<link href="./jscripts/codemirror/lib/codemirror.css" rel="stylesheet">
-<link href="./jscripts/codemirror/theme/mybb.css" rel="stylesheet">
-<script src="./jscripts/codemirror/lib/codemirror.js"></script>
-<script src="./jscripts/codemirror/mode/xml/xml.js"></script>
-<script src="./jscripts/codemirror/mode/javascript/javascript.js"></script>
-<script src="./jscripts/codemirror/mode/css/css.js"></script>
-<script src="./jscripts/codemirror/mode/htmlmixed/htmlmixed.js"></script>
-<script src="./jscripts/codemirror/mode/php/php.js"></script>
-<link href="./jscripts/codemirror/addon/dialog/dialog-mybb.css" rel="stylesheet" >
-<script src="./jscripts/codemirror/addon/dialog/dialog.js"></script>
-<script src="./jscripts/codemirror/addon/search/searchcursor.js"></script>
-<script src="./jscripts/codemirror/addon/search/search.js"></script>
-<script src="./jscripts/codemirror/addon/edit/matchbrackets.js"></script>
-<script src="./jscripts/codemirror/mode/clike/clike.js"></script>
-';
+			$page->extra_header .= '<link href="./jscripts/codemirror/lib/codemirror.css" rel="stylesheet">
+			<link href="./jscripts/codemirror/theme/mybb.css" rel="stylesheet">
+			<script src="./jscripts/codemirror/lib/codemirror.js"></script>
+			<script src="./jscripts/codemirror/mode/xml/xml.js"></script>
+			<script src="./jscripts/codemirror/mode/javascript/javascript.js"></script>
+			<script src="./jscripts/codemirror/mode/css/css.js"></script>
+			<script src="./jscripts/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+			<script src="./jscripts/codemirror/mode/php/php.js"></script>
+			<link href="./jscripts/codemirror/addon/dialog/dialog-mybb.css" rel="stylesheet" >
+			<script src="./jscripts/codemirror/addon/dialog/dialog.js"></script>
+			<script src="./jscripts/codemirror/addon/search/searchcursor.js"></script>
+			<script src="./jscripts/codemirror/addon/search/search.js"></script>
+			<script src="./jscripts/codemirror/addon/edit/matchbrackets.js"></script>
+			<script src="./jscripts/codemirror/mode/clike/clike.js"></script>';
 		}
 
 		$page->add_breadcrumb_item(htmlspecialchars_uni($category['name']));
@@ -170,6 +168,11 @@ if($mybb->get_input('manage') == 'pages')
 			if($db->num_rows($query))
 			{
 				$errors[] = $lang->ougc_pages_error_invalidurl;
+			}
+
+			if(!$mybb->get_input('php', 1) && check_template($mybb->get_input('template')))
+			{
+				$errors[] = $lang->ougc_pages_error_invalidtemplate;
 			}
 
 			if(empty($errors))
@@ -227,7 +230,12 @@ if($mybb->get_input('manage') == 'pages')
 		$form_container->output_row($lang->ougc_pages_form_visible, $lang->ougc_pages_form_visible_desc, $form->generate_yes_no_radio('visible', $mybb->get_input('visible', 1)));
 		$form_container->output_row($lang->ougc_pages_form_wrapper, $lang->ougc_pages_form_wrapper_desc, $form->generate_yes_no_radio('wrapper', $mybb->get_input('wrapper', 1)));
 		$form_container->output_row($lang->ougc_pages_form_php, $lang->ougc_pages_form_php_desc, $form->generate_yes_no_radio('php', $mybb->get_input('php', 1)));
-		$form_container->output_row($lang->ougc_pages_form_init, $lang->ougc_pages_form_init_desc, $form->generate_yes_no_radio('init', $mybb->get_input('init', 1)));
+		$form_container->output_row($lang->ougc_pages_form_execution, $lang->ougc_pages_form_execution_desc, $form->generate_select_box('init', [
+			1 => $lang->ougc_pages_form_execution_init,
+			2 => $lang->ougc_pages_form_execution_start,
+			3 => $lang->ougc_pages_form_execution_intermediate,
+			0 => $lang->ougc_pages_form_execution_end,
+		], $mybb->get_input('init', 1)));
 		$form_container->output_row($lang->ougc_pages_form_disporder, $lang->ougc_pages_form_disporder_desc, $form->generate_text_box('disporder', $mybb->get_input('disporder', 1), array('style' => 'text-align: center; width: 30px;" maxlength="5')));
 		$form_container->output_row($lang->ougc_pages_form_template, $lang->ougc_pages_form_template_desc, $form->generate_text_area('template', $mybb->get_input('template'), array('rows' => 5, 'id' => 'template', 'class' => '', 'style' => 'width: 100%; height: 500px;')));
 
